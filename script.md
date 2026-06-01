@@ -29,9 +29,9 @@ assignment distant and noisy.
 
 - A base-policy hardware *failure* (grasp slips). Caption: "Policies still
   fail."
-- Quick animated triptych: teleoperator icon ("interventions: expensive") →
-  noisy loss curve ("online RL: unstable") → checkmark on "advantage
-  conditioning."
+- Quick animated three-panel sequence: teleoperator icon ("interventions:
+  expensive") → reward curve ("online RL: sample inefficient") → checkmark on
+  "advantage conditioning."
 - Two stills side by side: secure grasp vs barely-holding grasp, both stamped
   with the **same value** in red. Hold on this — it's the core problem.
 
