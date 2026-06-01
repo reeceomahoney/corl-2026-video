@@ -47,9 +47,9 @@ BAD = ManimColor("#FF5A5A")  # red — the drawback panels
 GOOD = ManimColor("#5CD08A")  # green — advantage conditioning
 
 config.background_color = OXFORD_BLUE
-config.pixel_width = 1920
-config.pixel_height = 1080
-config.frame_rate = 60
+config.pixel_width = 1280
+config.pixel_height = 720
+config.frame_rate = 25
 
 PANEL_W = 3.9
 PANEL_H = 4.4

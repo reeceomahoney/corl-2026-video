@@ -27,13 +27,10 @@ assignment distant and noisy.
 
 **Shots:**
 
-- A base-policy hardware *failure* (grasp slips). Caption: "Policies still
-  fail."
+- Deployment loop graphic
 - Quick animated three-panel sequence: teleoperator icon ("interventions:
   expensive") → reward curve ("online RL: sample inefficient") → checkmark on
   "advantage conditioning."
-- Two stills side by side: secure grasp vs barely-holding grasp, both stamped
-  with the **same value** in red. Hold on this — it's the core problem.
 
 ## §3 — Key Insight
 

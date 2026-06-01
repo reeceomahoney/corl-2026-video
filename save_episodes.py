@@ -32,6 +32,11 @@ DATASETS = {
     "remove-ethernet": "reece-omahoney/rollout_remove-ethernet",
 }
 
+BASE_DATASETS = {
+    "remove-ethernet": ("reece-omahoney/remove-ethernet-2", 0),
+    "remove-pen-lid": ("reece-omahoney/remove-pen-lid-2", 0),
+}
+
 OUTPUT_DIR = Path(__file__).parent / "outputs"
 
 # Re-encode quality for the cut clips (lower CRF = higher quality / bigger file).
@@ -162,11 +167,32 @@ def process_dataset(name: str, repo: str, fs: HfFileSystem) -> None:
         )
 
 
+def process_base_dataset(name: str, repo: str, ep_index: int, fs: HfFileSystem) -> None:
+    """Save a single, fixed episode from a base (training) dataset."""
+    print(f"== {name} base ({repo})")
+    info = load_info(repo)
+    cameras = camera_keys(info)
+    video_template = info["video_path"]
+
+    ep_meta = read_episode_meta(fs, repo).to_pylist()
+    by_index = {row["episode_index"]: row for row in ep_meta}
+    if ep_index not in by_index:
+        print(f"  WARNING: episode {ep_index} not found")
+        return
+
+    print(f"  base: episode {ep_index}")
+    save_episode_videos(
+        repo, name, "base", by_index[ep_index], cameras, video_template
+    )
+
+
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     fs = HfFileSystem()
     for name, repo in DATASETS.items():
         process_dataset(name, repo, fs)
+    for name, (repo, ep_index) in BASE_DATASETS.items():
+        process_base_dataset(name, repo, ep_index, fs)
     print("Done.")
 
 
