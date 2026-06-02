@@ -19,11 +19,11 @@ present distance-based advantage learning.
 
 **VO:** Enabling VLAs to learn from their own deployment data is an active area
 of current research and presents a promising path to improving robustness. Human
-interventions need an expert teleoperator present for potentially hours, and
+interventions need an expert tele-operator present for potentially hours, and
 online RL is sample inefficient and expensive to train. Offline RL via advantage
 conditioning is a recent alternative that has shown some success without these
-drawbacks. Prior work only uses sparse success-or-failure rewards, making credit
-assignment distant and noisy.
+drawbacks, but prior work only uses sparse success-or-failure rewards, making
+credit assignment distant and noisy.
 
 **Shots:**
 
@@ -38,7 +38,7 @@ assignment distant and noisy.
 to the base dataset of only successes, i.e. as a policy drifts toward failure,
 its observations move away from the data the VLA was trained on. We exploit this
 by measuring each frame's k-nearest-neighbour distance to the training
-distribution, in SigLIP feature space, giving a dense, per-step reward that
+distribution, in sig-lip feature space, giving a dense, per-step reward that
 reflects the immediate quality of each observation, rather than relying entirely
 on the value propagating from the final state.
 
@@ -49,14 +49,14 @@ on the value propagating from the final state.
 
 ## §4 — Method
 
-**VO:** DistAL is a drop-in replacement for the reward in an advantage
-conditioning pipeline, which proceeds as follows. Step one: score every
-deployment frame by its distance to the training set. Step two: fit a value
-function on those returns. Step three: threshold the advantage into a positive
-or negative label and fine-tune the policy with classifier-free guidance on that
-label, steering it toward high-advantage actions at inference. The encoder is
-the VLA's own frozen SigLIP vision model, and the value function is built on a
-small Gemma backbone. No new reward engineering, no teleoperator, no online
+**VO:** distal is a drop-in replacement for the reward in an advantage
+conditioning pipeline. It proceeds as follows. Step one: score every deployment
+frame by its distance to the training set. Step two: fit a value function on
+those returns. Step three: threshold the advantage into a positive or negative
+label and fine-tune the policy with classifier-free guidance on that label,
+steering it toward high-advantage actions at inference. The encoder is the VLA's
+own frozen sig-lip vision model, and the value function is built on a small
+Gemma backbone. No task-specific reward engineering, no teleoperator, no online
 interaction.
 
 **Shots:**
@@ -72,9 +72,9 @@ benchmarks, where we outperform both the base policy and a success-or-failure
 advantage-conditioned baseline. The biggest gains come from where the policy
 faces the largest visual shift: camera changes and textures. We then test on two
 tasks on a real bi-manual Piper arm setup: removing a pen lid and unplugging an
-ethernet cable. DistAL lifts mean success by twenty-five points over the base
-policy, and nine point five over the binary-reward baseline. Ethernet jumps from
-forty-six to eighty-seven percent.
+ethernet cable. distal lifts mean success by twenty-five points over the base
+policy, and nine point five over the binary-reward baseline. The ethernet task
+jumps from forty-six to eighty-seven percent success.
 
 **Shots:**
 
@@ -88,9 +88,10 @@ ______________________________________________________________________
 
 ## §6 — Closing
 
-**VO:** In summary, DistAL enables deployment data to be used to improve VLA
+**VO:** In summary, distal enables deployment data to be used to improve VLA
 performance by combining a dense, distance-based reward with advantage
-conditioning. No teleoperator, no online RL.
+conditioning. It outperforms binary-reward advantage conditioned models and can
+easily scale to arbitrary tasks. Thank you for listening.
 
 **Shots:**
 
