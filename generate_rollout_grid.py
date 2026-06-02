@@ -40,13 +40,13 @@ CLIPS_PER_REPO = 2
 # observation.images.{left,right}_wrist, are the gripper-mounted wrist cameras.
 SCENE_CAMERA = "observation.images.top"
 
-# Grid shape. Cells are sized so the full COLSxROWS mosaic is exactly 1280x720;
-# each source tile is scaled to cover its cell and center-cropped (640x360 for 2x2).
+# Grid shape. Cells are sized so the full COLSxROWS mosaic is exactly 1920x1080;
+# each source tile is scaled to cover its cell and center-cropped (960x540 for 2x2).
 COLS = 2
 ROWS = 2
 N_CLIPS = COLS * ROWS
-CELL_W = 1280 // COLS
-CELL_H = 720 // ROWS
+CELL_W = 1920 // COLS
+CELL_H = 1080 // ROWS
 
 SEED = 0  # fixed seed so the random pick is reproducible
 
@@ -136,7 +136,7 @@ def build_grid(clips: list[Path], durations: list[float], fps: float, dst: Path)
         inputs += ["-stream_loop", "-1", "-i", str(clip)]
 
     # Normalise fps/SAR, then scale each tile to cover its cell and center-crop
-    # to the exact cell size so the assembled grid is precisely 1280x720.
+    # to the exact cell size so the assembled grid is precisely 1920x1080.
     pad_filters = [
         f"[{i}:v]fps={fps},"
         f"scale={CELL_W}:{CELL_H}:force_original_aspect_ratio=increase,"

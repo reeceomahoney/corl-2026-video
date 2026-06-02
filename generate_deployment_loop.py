@@ -21,6 +21,7 @@ Usage:
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -54,8 +55,8 @@ ACCENT = ManimColor("#78B2FF")  # light Oxford blue
 DIVIDER = ManimColor("#6E82A0")
 
 config.background_color = OXFORD_BLUE
-config.pixel_width = 1280
-config.pixel_height = 720
+config.pixel_width = 1920
+config.pixel_height = 1080
 config.frame_rate = 25
 config.disable_caching = True
 
@@ -67,7 +68,7 @@ CLIP = Path(__file__).parent / "outputs" / "remove-ethernet" / "base" / "top.mp4
 CLIP_START = 6.0  # seconds into the base rollout (skip the initial reach)
 CLIP_DURATION = 10.0
 DECODE_FPS = 24
-DECODE_HEIGHT = 360  # pixels; width follows the source 4:3 aspect ratio
+DECODE_HEIGHT = 540  # pixels; width follows the source 4:3 aspect ratio
 
 
 def load_video_rgba(
@@ -152,7 +153,17 @@ def make_dataset(frames: np.ndarray, *, height: float) -> Group:
 # --- Scene -------------------------------------------------------------------
 
 
+OUTPUT_PATH = Path(__file__).parent / "outputs" / "deployment_loop.mp4"
+
+
 class DeploymentLoop(Scene):
+    def render(self, *args, **kwargs) -> None:
+        """Render as usual, then copy the finished movie into outputs/."""
+        super().render(*args, **kwargs)
+        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(self.renderer.file_writer.movie_file_path, OUTPUT_PATH)
+        print(f"✓ copied render -> {OUTPUT_PATH}")
+
     def construct(self) -> None:
         frames = load_video_rgba(CLIP)
 

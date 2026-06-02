@@ -16,6 +16,9 @@ Usage:
 
 from __future__ import annotations
 
+import shutil
+from pathlib import Path
+
 import numpy as np
 from manim import (
     DOWN,
@@ -48,8 +51,8 @@ BAD = ManimColor("#FF5A5A")  # red — the drawback panels
 GOOD = ManimColor("#5CD08A")  # green — advantage conditioning
 
 config.background_color = OXFORD_BLUE
-config.pixel_width = 1280
-config.pixel_height = 720
+config.pixel_width = 1920
+config.pixel_height = 1080
 config.frame_rate = 25
 
 PANEL_W = 3.9
@@ -161,7 +164,17 @@ def stamp(panel: VGroup, *, good: bool) -> VMobject:
 # --- Scene -------------------------------------------------------------------
 
 
+OUTPUT_PATH = Path(__file__).parent / "outputs" / "motivation_panels.mp4"
+
+
 class MotivationPanels(Scene):
+    def render(self, *args, **kwargs) -> None:
+        """Render as usual, then copy the finished movie into outputs/."""
+        super().render(*args, **kwargs)
+        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(self.renderer.file_writer.movie_file_path, OUTPUT_PATH)
+        print(f"✓ copied render -> {OUTPUT_PATH}")
+
     def construct(self) -> None:
         panels = VGroup(
             make_panel(

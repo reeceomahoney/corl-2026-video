@@ -1,6 +1,6 @@
 """Animate a guided tour of the method overview figure for the DistAL video.
 
-Takes ``overview.png`` (the three-step "Score → Compute advantage → Train VLA"
+Takes ``outputs/overview.png`` (the three-step "Score → Compute advantage → Train VLA"
 schematic) and:
 
     1. Fades in the whole figure so the viewer sees all three steps at once.
@@ -23,7 +23,7 @@ that by loading the three panels as separate images at their true layout
 positions on the Oxford-blue background: the overview shows all three, and a
 zoom moves the camera onto one panel while the siblings fade back.
 
-Renders 1280x720 on the Oxford-blue background shared by the title card and the
+Renders 1920x1080 on the Oxford-blue background shared by the title card and the
 other graphics, so it drops straight into the edit.
 
 Usage:
@@ -33,6 +33,7 @@ Usage:
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -50,13 +51,13 @@ from manim import (
 OXFORD_BLUE = ManimColor("#002147")
 
 config.background_color = OXFORD_BLUE
-config.pixel_width = 1280
-config.pixel_height = 720
+config.pixel_width = 1920
+config.pixel_height = 1080
 config.frame_rate = 25
 
 # --- Source figure ----------------------------------------------------------
 
-SOURCE = Path(__file__).with_name("overview.png")
+SOURCE = Path(__file__).parent / "outputs" / "overview.png"
 CACHE = Path(__file__).with_name("media") / "overview_zoom"
 AUDIO = (
     Path(__file__).with_name("outputs")
@@ -116,7 +117,17 @@ def crop_panels(png: Path, bounds: list[tuple[int, int]]) -> list[Path]:
     return paths
 
 
+OUTPUT_PATH = Path(__file__).parent / "outputs" / "overview_zoom.mp4"
+
+
 class OverviewZoom(MovingCameraScene):
+    def render(self, *args, **kwargs) -> None:
+        """Render as usual, then copy the finished movie into outputs/."""
+        super().render(*args, **kwargs)
+        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(self.renderer.file_writer.movie_file_path, OUTPUT_PATH)
+        print(f"✓ copied render -> {OUTPUT_PATH}")
+
     def construct(self) -> None:
         CACHE.mkdir(parents=True, exist_ok=True)
         png = SOURCE
@@ -144,7 +155,7 @@ class OverviewZoom(MovingCameraScene):
         if len(panels) != len(STEP_CUES):
             raise RuntimeError(
                 f"detected {len(panels)} panels but have {len(STEP_CUES)} step "
-                "cues; re-check overview.png / STEP_CUES."
+                "cues; re-check outputs/overview.png / STEP_CUES."
             )
 
         camera = self.camera.frame

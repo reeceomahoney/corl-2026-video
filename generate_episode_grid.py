@@ -33,7 +33,7 @@ REPO = "reece-omahoney/pi05-libero-plus"
 SCENE_CAMERA = "observation.images.image"
 
 # Grid shape. Source tiles are square (256x256); each is center-cropped so the
-# full COLSxROWS mosaic is exactly 1280x720 (cells of 256x240 for 5x3).
+# full COLSxROWS mosaic is exactly 1920x1080 (cells of 384x360 for 5x3).
 COLS = 5
 ROWS = 3
 N_CLIPS = COLS * ROWS
@@ -102,15 +102,17 @@ def build_grid(clips: list[Path], durations: list[float], dst: Path) -> None:
     for clip in clips:
         inputs += ["-stream_loop", "-1", "-i", str(clip)]
 
-    # Each cell is sized so the whole COLSxROWS mosaic is exactly 1280x720.
-    # The source tiles are square (256x256), so center-crop each to the cell
-    # size (here 256x240) before stacking — only vertical pixels are trimmed.
-    cell_w = 1280 // COLS
-    cell_h = 720 // ROWS
+    # Each cell is sized so the whole COLSxROWS mosaic is exactly 1920x1080.
+    # The source tiles are square (256x256) and smaller than a cell (384x360),
+    # so scale each up to cover its cell and center-crop before stacking.
+    cell_w = 1920 // COLS
+    cell_h = 1080 // ROWS
 
-    # Normalise SAR/fps and center-crop to the cell size for xstack.
+    # Normalise fps, scale to cover the cell, then center-crop for xstack.
     pad_filters = [
-        f"[{i}:v]fps=20,setsar=1,crop={cell_w}:{cell_h}[v{i}]"
+        f"[{i}:v]fps=20,"
+        f"scale={cell_w}:{cell_h}:force_original_aspect_ratio=increase,"
+        f"crop={cell_w}:{cell_h},setsar=1[v{i}]"
         for i in range(len(clips))
     ]
 

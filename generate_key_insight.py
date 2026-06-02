@@ -9,7 +9,7 @@ move away from the data the VLA was trained on" — as a 2D SigLIP feature space
        growing longer as it drifts; a side bar reads off the resulting dense,
        per-step reward (∝ kNN distance), and the frame reddens as it goes OOD.
 
-Renders 1280x720 on the Oxford-blue background used by the title card and the
+Renders 1920x1080 on the Oxford-blue background used by the title card and the
 other §1-§2 graphics, so it drops straight into the edit.
 
 Usage:
@@ -18,6 +18,9 @@ Usage:
 """
 
 from __future__ import annotations
+
+import shutil
+from pathlib import Path
 
 import numpy as np
 from manim import (
@@ -57,8 +60,8 @@ GOOD = ManimColor("#5CD08A")  # green — in-distribution / training successes
 BAD = ManimColor("#FF5A5A")  # red — out-of-distribution / drifting to failure
 
 config.background_color = OXFORD_BLUE
-config.pixel_width = 1280
-config.pixel_height = 720
+config.pixel_width = 1920
+config.pixel_height = 1080
 config.frame_rate = 25
 
 # --- Geometry ---------------------------------------------------------------
@@ -131,7 +134,17 @@ def reward_from_point(p: np.ndarray, train: np.ndarray) -> float:
     return -float(np.clip(norm, 0.0, 1.0))
 
 
+OUTPUT_PATH = Path(__file__).parent / "outputs" / "knn.mp4"
+
+
 class KeyInsightScatter(Scene):
+    def render(self, *args, **kwargs) -> None:
+        """Render as usual, then copy the finished movie into outputs/."""
+        super().render(*args, **kwargs)
+        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(self.renderer.file_writer.movie_file_path, OUTPUT_PATH)
+        print(f"✓ copied render -> {OUTPUT_PATH}")
+
     def construct(self) -> None:
         train, cloud = make_training_cloud()
 
