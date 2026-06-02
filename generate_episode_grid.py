@@ -32,8 +32,8 @@ REPO = "reece-omahoney/pi05-libero-plus"
 # observation.images.image2, is the gripper-mounted wrist camera.
 SCENE_CAMERA = "observation.images.image"
 
-# Grid shape. Tiles are square (256x256), so the frame aspect ratio is COLS/ROWS.
-# 5x3 = 1.667, the closest sensible match to 720p's 16:9 (1.778) without padding.
+# Grid shape. Source tiles are square (256x256); each is center-cropped so the
+# full COLSxROWS mosaic is exactly 1280x720 (cells of 256x240 for 5x3).
 COLS = 5
 ROWS = 3
 N_CLIPS = COLS * ROWS
@@ -102,13 +102,22 @@ def build_grid(clips: list[Path], durations: list[float], dst: Path) -> None:
     for clip in clips:
         inputs += ["-stream_loop", "-1", "-i", str(clip)]
 
-    # Normalise SAR/fps for xstack.
-    pad_filters = [f"[{i}:v]fps=20,setsar=1[v{i}]" for i in range(len(clips))]
+    # Each cell is sized so the whole COLSxROWS mosaic is exactly 1280x720.
+    # The source tiles are square (256x256), so center-crop each to the cell
+    # size (here 256x240) before stacking — only vertical pixels are trimmed.
+    cell_w = 1280 // COLS
+    cell_h = 720 // ROWS
 
-    # xstack layout for an equal-cell COLSxROWS mosaic (tiles are 256x256).
-    cell = 256
+    # Normalise SAR/fps and center-crop to the cell size for xstack.
+    pad_filters = [
+        f"[{i}:v]fps=20,setsar=1,crop={cell_w}:{cell_h}[v{i}]"
+        for i in range(len(clips))
+    ]
+
+    # xstack layout for an equal-cell COLSxROWS mosaic.
     positions = [
-        f"{(idx % COLS) * cell}_{(idx // COLS) * cell}" for idx in range(N_CLIPS)
+        f"{(idx % COLS) * cell_w}_{(idx // COLS) * cell_h}"
+        for idx in range(N_CLIPS)
     ]
     layout = "|".join(positions)
     stack_inputs = "".join(f"[v{i}]" for i in range(N_CLIPS))

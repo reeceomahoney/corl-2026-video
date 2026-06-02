@@ -40,18 +40,21 @@ CLIPS_PER_REPO = 2
 # observation.images.{left,right}_wrist, are the gripper-mounted wrist cameras.
 SCENE_CAMERA = "observation.images.top"
 
-# Grid shape. Tiles are 640x480, so the frame is 1280x960 (4:3).
+# Grid shape. Cells are sized so the full COLSxROWS mosaic is exactly 1280x720;
+# each source tile is scaled to cover its cell and center-cropped (640x360 for 2x2).
 COLS = 2
 ROWS = 2
 N_CLIPS = COLS * ROWS
-CELL_W = 640
-CELL_H = 480
+CELL_W = 1280 // COLS
+CELL_H = 720 // ROWS
 
 SEED = 0  # fixed seed so the random pick is reproducible
 
 OUTPUT_PATH = Path(__file__).parent / "outputs" / "rollout_grid.mp4"
 
 CRF = 18  # re-encode quality for the cut clips / final grid (lower = better)
+
+EXTRA_SECONDS = 5.0  # extend the grid past the longest clip by looping this much
 
 
 # --- Dataset metadata -------------------------------------------------------
@@ -122,18 +125,22 @@ def build_grid(clips: list[Path], durations: list[float], fps: float, dst: Path)
     """Tile the clips into a COLSxROWS mosaic, looping each until the grid ends.
 
     Every clip loops (``-stream_loop -1``) so each tile keeps playing rather than
-    freezing; the whole grid is then trimmed to the longest clip's duration.
+    freezing; the whole grid is then trimmed to the longest clip's duration plus
+    EXTRA_SECONDS of extra looping.
     """
-    max_dur = max(durations)
+    max_dur = max(durations) + EXTRA_SECONDS
 
     # Loop every input infinitely; the output -t caps the grid at max_dur.
     inputs: list[str] = []
     for clip in clips:
         inputs += ["-stream_loop", "-1", "-i", str(clip)]
 
-    # Normalise fps/SAR and force a uniform cell size for xstack.
+    # Normalise fps/SAR, then scale each tile to cover its cell and center-crop
+    # to the exact cell size so the assembled grid is precisely 1280x720.
     pad_filters = [
-        f"[{i}:v]fps={fps},scale={CELL_W}:{CELL_H},setsar=1[v{i}]"
+        f"[{i}:v]fps={fps},"
+        f"scale={CELL_W}:{CELL_H}:force_original_aspect_ratio=increase,"
+        f"crop={CELL_W}:{CELL_H},setsar=1[v{i}]"
         for i in range(len(clips))
     ]
 

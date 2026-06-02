@@ -4,9 +4,18 @@ Takes ``overview.png`` (the three-step "Score → Compute advantage → Train VL
 schematic) and:
 
     1. Fades in the whole figure so the viewer sees all three steps at once.
-    2. Zooms into each step in turn for a few seconds, dimming the other two
-       so the focused panel reads as a spotlight.
+    2. Zooms into each step in turn, dimming the other two so the focused panel
+       reads as a spotlight.
     3. Pulls back out to the full figure to close.
+
+The motion is synced to the §4 (Method) narration clip
+``outputs/voice_clips/004_distal_is_a_drop_in_replacement_for_the_reward_in.mp3``:
+each zoom-in fires as the voiceover says "Step one / two / three", and the
+camera pulls back out on "The encoder is the ...". The cue times below were
+measured from that clip with ``ffmpeg ... silencedetect`` (each cue is the start
+of the named sentence). The render itself is silent, like the other graphics —
+the editor lays the voiceover track over it — and ``CLIP_END`` makes the clip's
+length match the narration so it drops in aligned.
 
 The figure is very wide (~2.89:1) while each panel is near-square, so a fixed
 16:9 frame can't fill on both the wide overview and a single panel. We sidestep
@@ -29,9 +38,6 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from manim import (
-    DOWN,
-    UP,
-    FadeIn,
     ImageMobject,
     ManimColor,
     MovingCameraScene,
@@ -52,13 +58,31 @@ config.frame_rate = 25
 
 SOURCE = Path(__file__).with_name("overview.png")
 CACHE = Path(__file__).with_name("media") / "overview_zoom"
+AUDIO = (
+    Path(__file__).with_name("outputs")
+    / "voice_clips"
+    / "004_distal_is_a_drop_in_replacement_for_the_reward_in.mp3"
+)
 
-# How tightly a zoomed panel fills the frame height, and how far the siblings
+# How tightly a zoomed panel fills the frame height, how tightly the full figure
+# fills the frame width (< 1 leaves a border around it), and how far the siblings
 # fade back while one panel is in focus.
 PANEL_FILL = 0.92
+OVERVIEW_FILL = 0.9
 DIM_OPACITY = 0.12
-HOLD = 3.2  # seconds parked on each panel
-MOVE = 1.1  # seconds for each camera move / zoom
+
+# --- Narration cues (seconds into the §4 clip) ------------------------------
+# Sentence starts measured from AUDIO via `ffmpeg -af silencedetect`. The three
+# zoom-ins fire on "Step one / two / three"; the pull-back fires on "The encoder
+# is the ...". CLIP_END is the clip's full duration, so the animation length
+# matches the narration exactly.
+STEP_CUES = [6.34, 10.58, 13.90]  # "Step one" / "Step two" / "Step three"
+ZOOM_OUT_CUE = 23.61  # "The encoder is the ..."
+CLIP_END = 35.04
+
+REVEAL = 1.4  # fade-in of the full figure (starts at t=0)
+MOVE = 1.1  # seconds for each zoom-in camera move
+ZOOM_OUT = 1.4  # seconds for the closing pull-back
 
 
 def detect_panels(png: Path) -> list[tuple[int, int]]:
@@ -115,43 +139,55 @@ class OverviewZoom(MovingCameraScene):
             panels.append(panel)
             centres.append(cx)
 
-        camera = self.camera.frame
+        # The cue timeline assumes one zoom per step, so the figure must split
+        # into exactly as many panels as there are step cues.
+        if len(panels) != len(STEP_CUES):
+            raise RuntimeError(
+                f"detected {len(panels)} panels but have {len(STEP_CUES)} step "
+                "cues; re-check overview.png / STEP_CUES."
+            )
 
-        # --- 1) Reveal the whole figure. ------------------------------------
+        camera = self.camera.frame
+        # Frame the full figure with a margin (it's mapped to the frame width, so
+        # pull the camera back a touch to keep it off the edges).
+        overview_h = fh / OVERVIEW_FILL
+        camera.set(height=overview_h)
+
+        # --- 1) Reveal the whole figure, then hold until "Step one". --------
         for panel in panels:
             self.add(panel)
             panel.set_opacity(0.0)
-        self.play(*[p.animate.set_opacity(1.0) for p in panels], run_time=1.4)
-        self.wait(2.0)
+        self.play(*[p.animate.set_opacity(1.0) for p in panels], run_time=REVEAL)
+        self.wait(STEP_CUES[0] - REVEAL)
 
-        # --- 2) Spotlight each step in turn. --------------------------------
+        # --- 2) Spotlight each step, the zoom firing on its cue. ------------
         # A zoomed panel fills (most of) the frame height.
         zoom_h = panels[0].height / PANEL_FILL
+        # When to leave each panel: the next step's cue, then the pull-back cue.
+        leave_at = STEP_CUES[1:] + [ZOOM_OUT_CUE]
 
         for i, panel in enumerate(panels):
-            others = [p for j, p in enumerate(panels) if j != i]
             self.play(
                 camera.animate.move_to([centres[i], 0.0, 0.0]).set(height=zoom_h),
-                *[p.animate.set_opacity(DIM_OPACITY) for p in others],
+                panel.animate.set_opacity(1.0),
+                *[
+                    p.animate.set_opacity(DIM_OPACITY)
+                    for j, p in enumerate(panels)
+                    if j != i
+                ],
                 run_time=MOVE,
                 rate_func=smooth,
             )
-            self.wait(HOLD)
-            # Restore the siblings as we leave (next move re-dims as needed).
-            if i < len(panels) - 1:
-                self.play(
-                    *[p.animate.set_opacity(1.0) for p in others],
-                    run_time=0.4,
-                )
+            self.wait(leave_at[i] - STEP_CUES[i] - MOVE)
 
-        # --- 3) Pull back out to the full figure. ---------------------------
+        # --- 3) Pull back out to the full figure on "The encoder is the". ---
         self.play(
-            camera.animate.move_to([0.0, 0.0, 0.0]).set(height=fh),
+            camera.animate.move_to([0.0, 0.0, 0.0]).set(height=overview_h),
             *[p.animate.set_opacity(1.0) for p in panels],
-            run_time=MOVE + 0.3,
+            run_time=ZOOM_OUT,
             rate_func=smooth,
         )
-        self.wait(1.6)
+        self.wait(CLIP_END - ZOOM_OUT_CUE - ZOOM_OUT)
 
 
 if __name__ == "__main__":

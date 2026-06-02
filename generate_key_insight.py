@@ -39,6 +39,7 @@ from manim import (
     Text,
     TracedPath,
     VGroup,
+    VMobject,
     Write,
     always_redraw,
     config,
@@ -67,10 +68,26 @@ CLOUD_RADIUS = 1.6  # successes are sampled uniformly within this disk
 N_TRAIN = 50
 K = 5  # neighbours drawn as spokes / averaged for the reward
 
-# The deployment frame drifts in a straight line, from the cluster centre out
-# (right and down) toward the failure region.
+# The deployment frame meanders inside the training cluster first (staying
+# in-distribution, reward ~0) before curving out toward the failure region.
+# These waypoints are fed through a smooth spline so the motion wanders and
+# loops rather than tracing a straight beeline.
 TRAJ_START = np.array([-2.9, 0.3, 0.0])
-TRAJ_END = np.array([2.8, -1, 0.0])
+TRAJ_END = np.array([2.8, -1.0, 0.0])
+TRAJ_WAYPOINTS = np.array(
+    [
+        TRAJ_START,
+        [-3.7, 1.1, 0.0],   # drift up-left, still well inside the cloud
+        [-2.0, 1.0, 0.0],   # arc across the top
+        [-2.4, -0.8, 0.0],  # loop back down through the centre
+        [-3.5, -0.2, 0.0],  # tight loop back toward the left edge
+        [-1.6, 0.6, 0.0],   # begin escaping to the right
+        [-0.2, -0.5, 0.0],  # cross open space, dipping down
+        [1.3, 0.5, 0.0],    # swing back up
+        [2.1, -0.3, 0.0],   # final approach to the failure region
+        TRAJ_END,
+    ]
+)
 
 # kNN distance is mapped through this range into the reward: ~0 in-distribution,
 # falling to -1 once the frame has fully drifted out.
@@ -148,7 +165,9 @@ class KeyInsightScatter(Scene):
         tick_neg.next_to(bar_track.get_corner(DOWN + LEFT), LEFT, buff=0.18)
 
         # --- The drifting deployment frame. ---------------------------------
-        path = Line(TRAJ_START, TRAJ_END)
+        # Smooth spline through the waypoints — a wandering, looping path
+        # rather than a straight drift.
+        path = VMobject().set_points_smoothly(TRAJ_WAYPOINTS)
         agent = Dot(TRAJ_START, radius=0.14, color=GOOD)
         agent.set_fill(GOOD, opacity=1.0).set_stroke(WHITE, width=2)
         trail = TracedPath(
@@ -224,9 +243,9 @@ class KeyInsightScatter(Scene):
         agent.remove_updater(recolor)
         readout.clear_updaters()
         ood_label = Text(
-            "Out-of-distribution\n= low reward", font="Noto Sans",
+            "Out of distribution\n= low reward", font="Noto Sans",
             weight="MEDIUM", color=BAD, font_size=28, line_spacing=0.6,
-        ).next_to(agent, UP, buff=1.4)
+        ).next_to(agent, UP, buff=1.8)
         self.play(Write(ood_label), run_time=1.4)
         self.play(agent.animate.scale(1.25), run_time=0.6)
         self.play(agent.animate.scale(1 / 1.25), run_time=0.6)
