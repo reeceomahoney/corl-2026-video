@@ -97,7 +97,7 @@ def reward_curve_icon() -> VGroup:
 def advantage_icon() -> VGroup:
     """The advantage definition, split over two lines, in green."""
     line1 = MathTex(r"A(s,a) =", color=GOOD)
-    line2 = MathTex(r"Q(s,a) - V(s)", color=GOOD)
+    line2 = MathTex(r"\sum_t r_t - V(s)", color=GOOD)
     eq = VGroup(line1, line2).arrange(DOWN, buff=0.22)
     eq.scale_to_fit_width(ICON_BOX * 1.25)
     return eq
@@ -116,7 +116,7 @@ def make_panel(icon: VGroup, title: str, subtitle: str, *, good: bool) -> VGroup
         stroke_width=3,
     )
 
-    icon.move_to(frame.get_center() + UP * 0.95)
+    icon.move_to(frame.get_center() + UP * (0.5 if good else 0.95))
 
     title_t = Text(title, font="Noto Sans", weight="BOLD", color=WHITE, font_size=34)
     sub_t = Text(subtitle, font="Noto Sans", weight="MEDIUM", color=accent, font_size=26)
@@ -185,34 +185,45 @@ class MotivationPanels(Scene):
         )
         panels.arrange(buff=PANEL_GAP).move_to([0, 0, 0])
 
-        # Reveal each panel in turn, synced to the VO beat.
-        # 1) Interventions: expensive.
+        # Cadence is synced to outputs/voice_clips/002_*.mp3 (§2 of script.md,
+        # ≈148 wpm). t=0 here is aligned to the word "Human" in the edit, i.e.
+        # audio 8.65s; the clip then runs to the end of the VO (~21s later).
+        # Phrase onsets, expressed in this clip's local timeline:
+        #   Panel 1  "Human interventions need an expert tele-operator..."  t=0.0
+        #   Panel 2  "and online RL is sample inefficient..."               t≈4.4
+        #   Panel 3  "Offline RL via advantage conditioning..."             t≈8.9
+        #   tail     "but prior work only uses sparse rewards..."           t≈15.4
+
+        # 1) Interventions: expensive. [0.0 - 4.4s]
         p = panels[0]
         self.play(FadeIn(p[0], shift=UP * 0.2), run_time=0.5)
         self.play(GrowFromCenter(p[1]), run_time=0.6)
-        self.play(Write(p[2]), Write(p[3]), run_time=0.7)
+        self.play(Write(p[2]), Write(p[3]), run_time=0.9)
         self.play(Create(stamp(p, good=False)), run_time=0.5)
-        self.wait(0.4)
+        self.wait(1.9)
 
-        # 2) Online RL: sample inefficient.
+        # 2) Online RL: sample inefficient. [4.4 - 8.9s]
         p = panels[1]
         self.play(FadeIn(p[0], shift=UP * 0.2), run_time=0.5)
         self.play(Create(p[1]), run_time=0.9)
-        self.play(Write(p[2]), Write(p[3]), run_time=0.7)
+        self.play(Write(p[2]), Write(p[3]), run_time=0.9)
         self.play(Create(stamp(p, good=False)), run_time=0.5)
-        self.wait(0.4)
+        self.wait(1.7)
 
-        # 3) Advantage conditioning — the green tick.
+        # 3) Advantage conditioning — equation written on "advantage
+        # conditioning", green tick on "shown some success". [8.9s - end]
         p = panels[2]
         self.play(FadeIn(p[0], shift=UP * 0.2), run_time=0.5)
-        self.play(Create(p[1]), run_time=0.8)
-        self.play(Write(p[2]), Write(p[3]), run_time=0.7)
+        self.play(Create(p[1]), run_time=1.4)
+        self.play(Write(p[2]), Write(p[3]), run_time=0.9)
         # The green tick stamps on top of the equation.
         self.play(Create(stamp(p, good=True)), run_time=0.5)
         # Let the winning panel pop.
         self.play(p.animate.scale(1.06), run_time=0.4)
         self.play(p.animate.scale(1 / 1.06), run_time=0.3)
-        self.wait(1.0)
+        # Hold on the winner through the "but prior work..." limitation,
+        # which sets up §3.
+        self.wait(8.1)
 
 
 if __name__ == "__main__":
