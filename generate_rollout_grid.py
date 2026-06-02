@@ -170,7 +170,7 @@ def main() -> None:
     rng = random.Random(SEED)
 
     # Pick CLIPS_PER_REPO random successful episodes from each repo.
-    picks: list[tuple[str, int]] = []  # (repo, episode_index)
+    chosen_by_repo: list[tuple[str, list[int]]] = []
     fps = 20.0
     for repo in REPOS:
         info = load_info(repo)
@@ -184,10 +184,15 @@ def main() -> None:
             )
         chosen = rng.sample(successes, CLIPS_PER_REPO)
         print(f"{repo}: {len(successes)} successes, chose {chosen}")
-        picks += [(repo, ep) for ep in chosen]
+        chosen_by_repo.append((repo, chosen))
 
-    # Randomise slot placement across the whole grid.
-    rng.shuffle(picks)
+    diagonals = [[0, 3], [1, 2]]
+    rng.shuffle(diagonals)  # randomise which repo takes which diagonal
+    picks: list[tuple[str, int]] = [("", -1)] * N_CLIPS
+    for (repo, chosen), slots in zip(chosen_by_repo, diagonals):
+        rng.shuffle(slots)  # randomise corner within the diagonal
+        for ep, slot in zip(chosen, slots):
+            picks[slot] = (repo, ep)
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)

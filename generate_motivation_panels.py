@@ -28,6 +28,7 @@ from manim import (
     GrowFromCenter,
     Line,
     ManimColor,
+    MathTex,
     RoundedRectangle,
     Scene,
     Text,
@@ -94,17 +95,12 @@ def reward_curve_icon() -> VGroup:
 
 
 def advantage_icon() -> VGroup:
-    """A bold green tick to mark advantage conditioning as the good path."""
-    check = VMobject(color=GOOD, stroke_width=12)
-    check.set_points_as_corners(
-        [
-            np.array([-0.55, 0.05, 0]),
-            np.array([-0.12, -0.45, 0]),
-            np.array([0.62, 0.6, 0]),
-        ]
-    )
-    ring = Circle(radius=0.95, color=GOOD, stroke_width=6)
-    return VGroup(ring, check)
+    """The advantage definition, split over two lines, in green."""
+    line1 = MathTex(r"A(s,a) =", color=GOOD)
+    line2 = MathTex(r"Q(s,a) - V(s)", color=GOOD)
+    eq = VGroup(line1, line2).arrange(DOWN, buff=0.22)
+    eq.scale_to_fit_width(ICON_BOX * 1.25)
+    return eq
 
 
 # --- Panel assembly ----------------------------------------------------------
@@ -138,14 +134,28 @@ def make_panel(icon: VGroup, title: str, subtitle: str, *, good: bool) -> VGroup
 
 
 def stamp(panel: VGroup, *, good: bool) -> VMobject:
-    """Build the ✗ / ✓ stamp over a panel's icon (returned, not added)."""
-    icon = panel[1]
+    """Build the ✗ / ✓ corner badge for a panel (returned, not added)."""
+    color = GOOD if good else BAD
+    ring = Circle(radius=0.92, color=color, stroke_width=6)
+    ring.set_fill(OXFORD_BLUE, opacity=1.0)
     if good:
-        return panel  # the advantage panel already carries its own tick
-    cross = Cross(
-        stroke_color=BAD, stroke_width=14
-    ).scale(0.5).move_to(icon.get_center())
-    return cross
+        mark = VMobject(color=color, stroke_width=12)
+        mark.set_points_as_corners(
+            [
+                np.array([-0.5, 0.0, 0]),
+                np.array([-0.12, -0.42, 0]),
+                np.array([0.58, 0.55, 0]),
+            ]
+        )
+    else:
+        mark = Cross(stroke_color=color, stroke_width=12)
+        mark.scale_to_fit_width(1.05)
+    badge = VGroup(ring, mark).scale(0.5)
+    frame = panel[0]
+    badge.move_to(
+        frame.get_center() + np.array([PANEL_W / 2 - 0.62, PANEL_H / 2 - 0.62, 0])
+    )
+    return badge
 
 
 # --- Scene -------------------------------------------------------------------
@@ -197,6 +207,8 @@ class MotivationPanels(Scene):
         self.play(FadeIn(p[0], shift=UP * 0.2), run_time=0.5)
         self.play(Create(p[1]), run_time=0.8)
         self.play(Write(p[2]), Write(p[3]), run_time=0.7)
+        # The green tick stamps on top of the equation.
+        self.play(Create(stamp(p, good=True)), run_time=0.5)
         # Let the winning panel pop.
         self.play(p.animate.scale(1.06), run_time=0.4)
         self.play(p.animate.scale(1 / 1.06), run_time=0.3)
