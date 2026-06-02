@@ -46,8 +46,6 @@ on the value propagating from the final state.
 
 - Animated 2D embedding scatter: a cloud of "training successes," then a
   deployment trajectory drifting outward, kNN distance line growing as it goes.
-- Cross-fade to `reward_trajectories.pdf`: kNN curve cleanly separating success
-  vs failure.
 
 ## §4 — Method
 
