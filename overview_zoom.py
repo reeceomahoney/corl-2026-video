@@ -27,7 +27,7 @@ Renders 1920x1080 on the Oxford-blue background shared by the title card and the
 other graphics, so it drops straight into the edit.
 
 Usage:
-    uv run manim -qh generate_overview_zoom.py OverviewZoom
+    uv run manim -qh overview_zoom.py OverviewZoom
     # add -p to preview
 """
 
@@ -46,7 +46,7 @@ from manim import (
     smooth,
 )
 
-# --- Visual identity (matches generate_title_card.py / the other graphics) ---
+# --- Visual identity (matches title_card.py / the other graphics) ---
 
 OXFORD_BLUE = ManimColor("#002147")
 
@@ -203,5 +203,5 @@ class OverviewZoom(MovingCameraScene):
 
 if __name__ == "__main__":
     raise SystemExit(
-        "Render with: uv run manim -qh generate_overview_zoom.py OverviewZoom"
+        "Render with: uv run manim -qh overview_zoom.py OverviewZoom"
     )

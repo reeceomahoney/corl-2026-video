@@ -4,7 +4,7 @@ Produces a 1920x1080 PNG on an Oxford-blue background with the project title,
 authors, and institute, laid out as a centred title block.
 
 Usage:
-    uv run python generate_title_card.py
+    uv run python title_card.py
 """
 
 from __future__ import annotations

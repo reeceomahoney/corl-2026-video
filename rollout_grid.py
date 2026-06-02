@@ -13,7 +13,7 @@ ffmpeg using the per-episode [from, to] timestamps in the episode metadata. Clip
 different lengths, so each tile loops until the longest clip ends, keeping the grid full.
 
 Usage:
-    uv run python generate_rollout_grid.py
+    uv run python rollout_grid.py
 """
 
 from __future__ import annotations

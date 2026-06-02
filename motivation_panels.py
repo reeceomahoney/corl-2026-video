@@ -10,7 +10,7 @@ Renders a 1920x1080 clip on the Oxford-blue background used by the title card,
 so it drops straight into the edit.
 
 Usage:
-    uv run manim -qh generate_motivation_panels.py MotivationPanels
+    uv run manim -qh motivation_panels.py MotivationPanels
     # add -p to preview, or --format=mov --transparent for an alpha overlay
 """
 
@@ -41,7 +41,7 @@ from manim import (
     config,
 )
 
-# --- Visual identity (matches generate_title_card.py) -----------------------
+# --- Visual identity (matches title_card.py) -----------------------
 
 OXFORD_BLUE = ManimColor("#002147")
 WHITE = ManimColor("#F5F7FA")
@@ -241,5 +241,5 @@ class MotivationPanels(Scene):
 
 if __name__ == "__main__":
     raise SystemExit(
-        "Render with: uv run manim -qh generate_motivation_panels.py MotivationPanels"
+        "Render with: uv run manim -qh motivation_panels.py MotivationPanels"
     )

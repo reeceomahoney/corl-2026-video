@@ -15,7 +15,7 @@ Renders 1920x1080 on the Oxford-blue background used by the title card and
 motivation panels, so it drops straight into the edit.
 
 Usage:
-    uv run manim -qh generate_deployment_loop.py DeploymentLoop
+    uv run manim -qh deployment_loop.py DeploymentLoop
     # add -p to preview
 """
 
@@ -47,7 +47,7 @@ from manim import (
     config,
 )
 
-# --- Visual identity (matches generate_title_card.py / panels) --------------
+# --- Visual identity (matches title_card.py / panels) --------------
 
 OXFORD_BLUE = ManimColor("#002147")
 WHITE = ManimColor("#F5F7FA")
@@ -268,5 +268,5 @@ class DeploymentLoop(Scene):
 
 if __name__ == "__main__":
     raise SystemExit(
-        "Render with: uv run manim -qh generate_deployment_loop.py DeploymentLoop"
+        "Render with: uv run manim -qh deployment_loop.py DeploymentLoop"
     )

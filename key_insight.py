@@ -13,7 +13,7 @@ Renders 1920x1080 on the Oxford-blue background used by the title card and the
 other §1-§2 graphics, so it drops straight into the edit.
 
 Usage:
-    uv run manim -qh generate_key_insight.py KeyInsightScatter
+    uv run manim -qh key_insight.py KeyInsightScatter
     # add -p to preview
 """
 
@@ -50,7 +50,7 @@ from manim import (
     linear,
 )
 
-# --- Visual identity (matches generate_title_card.py / panels) --------------
+# --- Visual identity (matches title_card.py / panels) --------------
 
 OXFORD_BLUE = ManimColor("#002147")
 WHITE = ManimColor("#F5F7FA")
@@ -267,5 +267,5 @@ class KeyInsightScatter(Scene):
 
 if __name__ == "__main__":
     raise SystemExit(
-        "Render with: uv run manim -qh generate_key_insight.py KeyInsightScatter"
+        "Render with: uv run manim -qh key_insight.py KeyInsightScatter"
     )

@@ -10,7 +10,7 @@ with ffmpeg using the per-episode [from, to] timestamps in the episode metadata
 holds its last frame (tpad) until the longest clip ends, keeping the grid full.
 
 Usage:
-    uv run python generate_episode_grid.py
+    uv run python episode_grid.py
 """
 
 from __future__ import annotations
